@@ -1,3 +1,35 @@
+# Tayga Playbooks
+
+Community fork of Mattermost Playbooks v2.9.7 (upstream commit
+`47e06734cd71cfe0b01f57749aa116ac04006022`) for Tayga Mail Server.
+
+The fork retains the upstream Apache-2.0 application and UI. The separately
+licensed `server/enterprise` directory is excluded from this distribution. A
+new Apache-2.0 community feature policy replaces that dependency; it neither
+creates a Mattermost license nor enables server development/testing settings.
+Resource authorization and tenant/domain isolation are enforced independently.
+The compatibility plugin ID remains `playbooks`; do not enable this fork and the
+original Playbooks package in the same runtime.
+
+Build: `GOOS=linux GOARCH=amd64 scripts/build-tms.sh` (Go and Node/npm required).
+Packages and SHA-256 files are written to `dist/`. The package contains upstream
+Apache license/notice files and `TMS-PROVENANCE.json`; it excludes enterprise
+source. Plugin SDK permissions are still required regardless of feature policy.
+
+Validated locally: TypeScript, 42 frontend license/feature-hook tests, server app
+and API tests, and Linux ARM64 activation in the TMS plugin host with no license
+and development/testing disabled. HTTP acceptance covers playbook/checklist
+creation, run/channel creation, task completion and persisted task state.
+
+Status: integration under development, not yet production-qualified in TMS.
+Build provenance, license notices and scope acceptance must pass before rollout.
+No claim of endorsement by Mattermost is made.
+
+Upstream documentation follows; its commercial-license and production-support
+statements describe the original product, not this community fork.
+
+---
+
 # Mattermost Playbooks
 
 [![Release](https://img.shields.io/github/v/release/mattermost/mattermost-plugin-playbooks)](https://github.com/mattermost/mattermost-plugin-playbooks/releases/latest)

@@ -1,0 +1,39 @@
+name: Tayga community build
+on:
+  push:
+    branches: [codex/tms-community]
+  pull_request:
+    branches: [codex/tms-community]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: webapp/package-lock.json
+      - name: Build and test community distribution
+        run: |
+          test ! -e server/enterprise
+          (cd build/manifest && go build -o ../bin/manifest .)
+          build/bin/manifest apply
+          go test ./server/community ./server/app ./server/api
+          CGO_ENABLED=0 go build -trimpath -o server/dist/plugin-linux-amd64 ./server
+          cd webapp
+          npm ci --no-audit --no-fund
+          npm run check-types
+          ./node_modules/.bin/jest --ci --runInBand src/hooks/license.test.ts src/license.test.ts
+          npm run build
+          cd ..
+          python3 scripts/package-tms.py linux-amd64
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tayga-playbooks-linux-amd64
+          path: dist/tayga-playbooks-*.tar.gz*

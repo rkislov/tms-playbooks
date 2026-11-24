@@ -1,9 +1,9 @@
 {
   "id": "playbooks",
-  "name": "Playbooks",
+  "name": "Tayga Playbooks",
   "description": "Mattermost Playbooks enable reliable and repeatable processes for your teams using checklists, automation, and retrospectives.",
-  "homepage_url": "https://github.com/mattermost/mattermost-plugin-playbooks/",
-  "support_url": "https://github.com/mattermost/mattermost-plugin-playbooks/issues",
+  "homepage_url": "https://github.com/rkislov/tms-playbooks",
+  "support_url": "https://github.com/rkislov/tms-playbooks/issues",
   "icon_path": "assets/plugin_icon.svg",
   "min_server_version": "11.1.0",
   "server": {
@@ -50,5 +50,6 @@
         "default": false
       }
     ]
-  }
+  },
+  "version": "2.9.7-tms.1"
 }

@@ -20,7 +20,7 @@ import PlaybookRunPostMenuIcon from 'src/components/assets/icons/post_menu_icon'
 import {addToTimeline, showPostMenuModal, startPlaybookRun} from 'src/actions';
 
 import {useAllowAddMessageToTimelineInCurrentTeam} from 'src/hooks';
-import {isProfessionalLicensedOrDevelopment} from 'src/license';
+import {hasCommunityFeatures} from 'src/community_features';
 
 function shouldShowPostMenuForPost(store: Store, postId: string) {
     const state = store.getState() as GlobalState;
@@ -80,7 +80,7 @@ export function makeAttachToPlaybookRunAction(store: Store) {
         text: AttachToPlaybookRunPostMenuText,
         action: (postId: string) => {
             const state = store.getState() as GlobalState;
-            if (isProfessionalLicensedOrDevelopment(state)) {
+            if (hasCommunityFeatures(state)) {
                 store.dispatch(addToTimeline(postId) as any);
             } else {
                 store.dispatch(showPostMenuModal() as any);

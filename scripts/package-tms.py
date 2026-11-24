@@ -1,0 +1,52 @@
+#!/usr/bin/env python3
+"""Package an already built community plugin, excluding enterprise source/code."""
+import hashlib
+import json
+import pathlib
+import subprocess
+import sys
+import tarfile
+import tempfile
+import shutil
+
+root = pathlib.Path(__file__).resolve().parents[1]
+target = sys.argv[1] if len(sys.argv) == 2 else 'linux-arm64'
+if target not in {'linux-amd64', 'linux-arm64', 'darwin-arm64', 'darwin-amd64'}:
+    raise SystemExit('Unsupported target')
+manifest = json.loads((root / 'plugin.json').read_text())
+executable = f'server/dist/plugin-{target}'
+if not (root / executable).is_file() or not (root / 'webapp/dist/main.js').is_file():
+    raise SystemExit('Build server and webapp first')
+manifest['server']['executables'] = {target: executable}
+output = root / 'dist'
+output.mkdir(exist_ok=True)
+archive = output / f'tayga-playbooks-{manifest["version"]}-{target}.tar.gz'
+with tempfile.TemporaryDirectory(prefix='tms-playbooks-package-') as tmp:
+    plugin = pathlib.Path(tmp) / 'playbooks'
+    plugin.mkdir()
+    (plugin / 'plugin.json').write_text(json.dumps(manifest, indent=2) + '\n')
+    for name in ('assets', 'LICENSE.txt', 'NOTICE.txt', 'README.md'):
+        source = root / name
+        if source.is_dir():
+            shutil.copytree(source, plugin / name)
+        else:
+            shutil.copy2(source, plugin / name)
+    for name in (executable, 'webapp/dist/main.js'):
+        destination = plugin / name
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(root / name, destination)
+    provenance = {
+        'upstream_tag': 'v2.9.7',
+        'upstream_commit': '47e06734cd71cfe0b01f57749aa116ac04006022',
+        'fork_commit': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=root, text=True).strip(),
+        'working_tree_modified': bool(subprocess.check_output(['git', 'status', '--porcelain'], cwd=root)),
+        'target': target,
+        'enterprise_directory_included': False,
+    }
+    (plugin / 'TMS-PROVENANCE.json').write_text(json.dumps(provenance, indent=2) + '\n')
+    with tarfile.open(archive, 'w:gz') as bundle:
+        bundle.add(plugin, arcname='playbooks')
+digest = hashlib.sha256(archive.read_bytes()).hexdigest()
+archive.with_suffix(archive.suffix + '.sha256').write_text(f'{digest}  {archive.name}\n')
+print(archive)
+print(digest)

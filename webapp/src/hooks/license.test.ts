@@ -4,7 +4,7 @@
 import {renderHook} from '@testing-library/react-hooks';
 
 import * as reduxHooks from 'src/hooks/redux';
-import * as license from 'src/license';
+import * as license from 'src/community_features';
 
 import {
     useAllowAddMessageToTimelineInCurrentTeam,
@@ -27,8 +27,8 @@ describe('License Hooks', () => {
 
     beforeEach(() => {
         useSelectorSpy = jest.spyOn(reduxHooks, 'useAppSelector');
-        isProfessionalLicensedOrDevelopmentSpy = jest.spyOn(license, 'isProfessionalLicensedOrDevelopment');
-        isEnterpriseLicensedOrDevelopmentSpy = jest.spyOn(license, 'isEnterpriseLicensedOrDevelopment');
+        isProfessionalLicensedOrDevelopmentSpy = jest.spyOn(license, 'hasCommunityFeatures');
+        isEnterpriseLicensedOrDevelopmentSpy = jest.spyOn(license, 'hasCommunityFeatures');
     });
 
     afterEach(() => {

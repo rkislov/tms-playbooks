@@ -25,8 +25,8 @@ import (
 	"github.com/mattermost/mattermost-plugin-playbooks/server/app"
 	"github.com/mattermost/mattermost-plugin-playbooks/server/bot"
 	"github.com/mattermost/mattermost-plugin-playbooks/server/command"
+	"github.com/mattermost/mattermost-plugin-playbooks/server/community"
 	"github.com/mattermost/mattermost-plugin-playbooks/server/config"
-	"github.com/mattermost/mattermost-plugin-playbooks/server/enterprise"
 	"github.com/mattermost/mattermost-plugin-playbooks/server/metrics"
 	"github.com/mattermost/mattermost-plugin-playbooks/server/scheduler"
 	"github.com/mattermost/mattermost-plugin-playbooks/server/sqlstore"
@@ -97,13 +97,6 @@ func (p *Plugin) OnActivate() error {
 	p.metricsService = p.newMetricsInstance()
 	pluginAPIClient := pluginapi.NewClient(p.API, p.Driver)
 	p.pluginAPI = pluginAPIClient
-
-	if !pluginapi.IsE10LicensedOrDevelopment(
-		pluginAPIClient.Configuration.GetConfig(),
-		pluginAPIClient.System.GetLicense(),
-	) {
-		return errors.New("this plugin requires a professional license or higher")
-	}
 
 	p.config = config.NewConfigService(pluginAPIClient, manifest)
 
@@ -177,7 +170,7 @@ func (p *Plugin) OnActivate() error {
 	keywordsThreadIgnorer := app.NewKeywordsThreadIgnorer()
 	p.channelActionService = app.NewChannelActionsService(pluginAPIClient, p.bot, p.config, channelActionStore, p.playbookService, keywordsThreadIgnorer)
 
-	p.licenseChecker = enterprise.NewLicenseChecker(pluginAPIClient)
+	p.licenseChecker = community.Features{}
 
 	p.playbookRunService = app.NewPlaybookRunService(
 		pluginAPIClient,
