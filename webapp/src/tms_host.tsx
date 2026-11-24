@@ -135,16 +135,27 @@ async function boot() {
     };
     const subject = (value: string) => {try {return JSON.parse(atob(value.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).sub || value;} catch {return value;}};
     const initialSubject = subject(token());
+    const endSession = () => {
+        if (stopped) {return;}
+        stopped = true;ws?.close();root.unmount();
+        document.getElementById('root')!.textContent = 'Сессия завершена. Откройте модуль из TMS.';
+        nativeFetch(base + '/products/session', {method: 'DELETE', credentials: 'same-origin'}).catch(() => {});
+    };
     window.addEventListener('storage', (event) => {
         if (event.key !== 'tayga.tokens') {return;}
         if (stopped && token()) {location.reload();return;}
         if (!token() || subject(token()) !== initialSubject) {
-            stopped = true;ws?.close();root.unmount();
-            document.getElementById('root')!.textContent = 'Сессия завершена. Откройте модуль из TMS.';
+            endSession();
             if (token()) {location.reload();}
         }
     });
-    const renewal = setInterval(() => {if (token() && subject(token()) === initialSubject) {fetch(base + '/products/session', {method: 'POST'}).catch(() => {});}}, 60000);
+    const renewal = setInterval(() => {
+        const currentToken = token();
+        if (stopped || !currentToken || subject(currentToken) !== initialSubject) {return;}
+        fetch(base + '/products/session', {method: 'POST'}).then((response) => {
+            if ((response.status === 401 || response.status === 403) && token() === currentToken) {endSession();}
+        }).catch(() => {});
+    }, 60000);
     window.addEventListener('pagehide', () => clearInterval(renewal), {once: true});
     connect();window.addEventListener('pagehide', () => {stopped = true;ws?.close();}, {once: true});
 }
