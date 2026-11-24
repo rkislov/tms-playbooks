@@ -29,8 +29,9 @@ jobs:
           cd webapp
           npm ci --no-audit --no-fund
           npm run check-types
-          ./node_modules/.bin/jest --ci --runInBand src/hooks/license.test.ts src/license.test.ts
+          ./node_modules/.bin/jest --ci --runInBand src/hooks/license.test.ts src/license.test.ts src/tms_markdown.test.tsx
           npm run build
+          ./node_modules/.bin/webpack --config webpack.tms-host.js --mode production
           cd ..
           python3 scripts/package-tms.py linux-amd64
       - uses: actions/upload-artifact@v4

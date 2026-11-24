@@ -16,10 +16,17 @@ Packages and SHA-256 files are written to `dist/`. The package contains upstream
 Apache license/notice files and `TMS-PROVENANCE.json`; it excludes enterprise
 source. Plugin SDK permissions are still required regardless of feature policy.
 
-Validated locally: TypeScript, 42 frontend license/feature-hook tests, server app
+The bundle includes `tms-host.js`, a scoped original-product runtime shared with
+Boards. It supplies the vendor React/Redux globals, original product registry,
+modal handling, translations, authenticated API/WebSocket access and sanitized
+Markdown. TMS bearer tokens never enter cross-origin requests.
+
+Validated locally: TypeScript, 44 frontend feature-hook/Markdown tests, server app
 and API tests, and Linux ARM64 activation in the TMS plugin host with no license
 and development/testing disabled. HTTP acceptance covers playbook/checklist
-creation, run/channel creation, task completion and persisted task state.
+creation, run/channel creation, task completion and persisted task state. Original
+UI browser acceptance covers private playbook creation, launching a run, completing
+a task and finishing the run; Boards board/card persistence also passes in TMS.
 
 Status: integration under development, not yet production-qualified in TMS.
 Build provenance, license notices and scope acceptance must pass before rollout.

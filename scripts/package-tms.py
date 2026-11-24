@@ -31,7 +31,7 @@ with tempfile.TemporaryDirectory(prefix='tms-playbooks-package-') as tmp:
             shutil.copytree(source, plugin / name)
         else:
             shutil.copy2(source, plugin / name)
-    for name in (executable, 'webapp/dist/main.js'):
+    for name in (executable, 'webapp/dist/main.js', 'webapp/dist/tms-host.js'):
         destination = plugin / name
         destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(root / name, destination)

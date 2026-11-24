@@ -7,5 +7,5 @@ case "$TARGET_OS-$TARGET_ARCH" in linux-arm64|linux-amd64|darwin-arm64|darwin-am
 (cd build/manifest && go build -o ../bin/manifest .)
 build/bin/manifest apply
 CGO_ENABLED=0 GOOS="$TARGET_OS" GOARCH="$TARGET_ARCH" go build -trimpath -o "server/dist/plugin-$TARGET_OS-$TARGET_ARCH" ./server
-(cd webapp && npm ci --no-audit --no-fund && npm run check-types && npm run build)
+(cd webapp && npm ci --no-audit --no-fund && npm run check-types && npm run build && ./node_modules/.bin/webpack --config webpack.tms-host.js --mode production)
 python3 scripts/package-tms.py "$TARGET_OS-$TARGET_ARCH"
