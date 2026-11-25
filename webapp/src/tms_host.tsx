@@ -93,7 +93,13 @@ async function boot() {
             registerReducer: (reducer: any) => reducerRegistry.register('plugins-' + id, reducer),
             registerProduct: (_path: string, _icon: string, _name: string, _url: string, component: React.ComponentType<any>) => {product = component;},
             registerRootComponent: (component: React.ComponentType<any>) => {roots.push(component);return String(roots.length);},
-            registerTranslations: (loader: any) => {messages = loader(data.user.locale || "ru") || {};},
+            registerTranslations: (loader: any) => {
+                const locale = data.user.locale || 'ru';
+                messages = loader(locale) || {};
+                if (id === 'focalboard' && locale === 'ru') {
+                    messages = {...messages, ...globals.taygaBoardsTemplatesRu?.messages};
+                }
+            },
             registerSlashCommandWillBePostedHook: () => {},
             registerWebSocketEventHandler: (name: string, handler: (e: any) => void) => {events.set(name, handler);},
             unregisterWebSocketEventHandler: (name: string) => {events.delete(name);},
