@@ -55,6 +55,7 @@ export type ContextMenuLocation = typeof CONTEXT_MENU_LOCATION[keyof typeof CONT
 
 interface Props {
     playbookRun: PlaybookRun;
+    runTitle?: string;
     role: Role;
     isFavoriteRun: boolean;
     isFollowing: boolean;
@@ -64,7 +65,7 @@ interface Props {
     location?: ContextMenuLocation;
 }
 
-export const ContextMenu = ({playbookRun, hasPermanentViewerAccess, role, isFavoriteRun, isFollowing, toggleFavorite, onRenameClick, location = CONTEXT_MENU_LOCATION.BACKSTAGE}: Props) => {
+export const ContextMenu = ({playbookRun, runTitle = playbookRun.name, hasPermanentViewerAccess, role, isFavoriteRun, isFollowing, toggleFavorite, onRenameClick, location = CONTEXT_MENU_LOCATION.BACKSTAGE}: Props) => {
     const dispatch = useAppDispatch();
     const currentUserId = useAppSelector(getCurrentUserId);
     const {leaveRunConfirmModal, showLeaveRunConfirm} = useLeaveRun(hasPermanentViewerAccess, playbookRun.id, playbookRun.owner_user_id, isFollowing);
@@ -99,7 +100,7 @@ export const ContextMenu = ({playbookRun, hasPermanentViewerAccess, role, isFavo
                 <IconWrapper>
                     {icon}
                 </IconWrapper>
-                <TitleText ref={titleTextRef}>{playbookRun.name}</TitleText>
+                <TitleText ref={titleTextRef}>{runTitle}</TitleText>
             </Title>
             <i
                 className='icon icon-chevron-down'
@@ -113,7 +114,7 @@ export const ContextMenu = ({playbookRun, hasPermanentViewerAccess, role, isFavo
             {isTitleOverflowing ? (
                 <Tooltip
                     id={`run-title-tooltip-${playbookRun.id}`}
-                    content={playbookRun.name}
+                    content={runTitle}
                 >
                     {titleButton}
                 </Tooltip>

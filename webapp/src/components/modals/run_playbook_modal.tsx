@@ -6,7 +6,7 @@ import React, {ComponentProps, useEffect, useState} from 'react';
 import {FormattedMessage, useIntl} from 'react-intl';
 import styled from 'styled-components';
 
-import {getCurrentUserId} from 'mattermost-redux/selectors/entities/users';
+import {getCurrentUser} from 'mattermost-redux/selectors/entities/users';
 import {ArrowLeftIcon} from '@mattermost/compass-icons/components';
 import {ApolloProvider} from '@apollo/client';
 
@@ -28,6 +28,7 @@ import {displayPlaybookCreateModal} from 'src/actions';
 import PlaybooksSelector from 'src/components/playbooks_selector';
 import {useCanCreatePlaybooksInTeam} from 'src/hooks';
 import {RUN_NAME_MAX_LENGTH} from 'src/constants';
+import {newTutorialRunTitle, playbookIsTutorialPlaybook} from 'src/components/templates/tutorial_run';
 
 const ID = 'playbooks_run_playbook_dialog';
 
@@ -74,14 +75,16 @@ const RunPlaybookModal = ({
     const currentChannelId = useAppSelector(getCurrentChannelId);
     const currentChannel = useAppSelector(getCurrentChannel);
     const currentChannelIsDMOrGM = currentChannel?.type === General.DM_CHANNEL || currentChannel?.type === General.GM_CHANNEL;
-    let userId = useAppSelector(getCurrentUserId);
+    const currentUser = useAppSelector(getCurrentUser);
+    let userId = currentUser.id;
     if (playbook?.default_owner_enabled && playbook.default_owner_id) {
         userId = playbook.default_owner_id;
     }
 
     useEffect(() => {
         if (playbook?.channel_mode === 'create_new_channel') {
-            setRunName(playbook.channel_name_template);
+            setRunName(playbookIsTutorialPlaybook(playbook.title) ?
+                newTutorialRunTitle(formatMessage, currentUser) : playbook.channel_name_template);
         }
     }, [playbook, playbook?.channel_name_template, playbook?.channel_mode]);
 

@@ -36,6 +36,7 @@ import {PlaybookRun, Metadata as PlaybookRunMetadata, PlaybookRunStatus} from 's
 interface Props {
     playbookRunMetadata: PlaybookRunMetadata | null;
     playbookRun: PlaybookRun;
+    runTitle: string;
     role: Role;
     hasPermanentViewerAccess: boolean;
     onInfoClick: () => void;
@@ -44,7 +45,7 @@ interface Props {
     isFollowing: boolean;
 }
 
-export const RunHeader = ({playbookRun, playbookRunMetadata, isFollowing, hasPermanentViewerAccess, role, onInfoClick, onTimelineClick, rhsSection}: Props) => {
+export const RunHeader = ({playbookRun, runTitle, playbookRunMetadata, isFollowing, hasPermanentViewerAccess, role, onInfoClick, onTimelineClick, rhsSection}: Props) => {
     const dispatch = useAppDispatch();
     const {formatMessage} = useIntl();
     const updateRun = useUpdateRun(playbookRun.id);
@@ -87,6 +88,7 @@ export const RunHeader = ({playbookRun, playbookRunMetadata, isFollowing, hasPer
                     <>
                         <ContextMenu
                             playbookRun={playbookRun}
+                            runTitle={runTitle}
                             role={role}
                             onRenameClick={edit}
                             isFavoriteRun={isFavoriteRun}

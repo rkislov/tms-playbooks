@@ -9,7 +9,7 @@ import styled from 'styled-components';
 import {Redirect, useLocation, useRouteMatch} from 'react-router-dom';
 import {selectTeam} from 'mattermost-redux/actions/teams';
 import {getCurrentTeamId} from 'mattermost-redux/selectors/entities/teams';
-import {getCurrentUser} from 'mattermost-redux/selectors/entities/users';
+import {getCurrentUser, getUser} from 'mattermost-redux/selectors/entities/users';
 import qs from 'qs';
 
 import {useAppDispatch, useAppSelector} from 'src/hooks/redux';
@@ -27,7 +27,7 @@ import {
 import {Role} from 'src/components/backstage/playbook_runs/shared';
 import {pluginErrorUrl} from 'src/browser_routing';
 import {ErrorPageTypes} from 'src/constants';
-import {PlaybookRun} from 'src/types/playbook_run';
+import {playbookIsTutorialPlaybook, tutorialRunTitle} from 'src/components/templates/tutorial_run';
 
 import {useDefaultRedirectOnTeamChange} from 'src/components/backstage/main_body';
 import {useFilter} from 'src/components/backstage/playbook_runs/playbook_run/timeline_utils';
@@ -44,19 +44,19 @@ import RHSInfo from './rhs_info';
 import {Participants} from './rhs_participants';
 import RHSTimeline from './rhs_timeline';
 
-const RHSRunInfoTitle = <FormattedMessage defaultMessage={'Info'}/>;
+const RHSRunInfoTitle = <FormattedMessage id={'we4Lby'} defaultMessage={'Info'}/>;
 const RHSParticipantsTitle = <FormattedMessage defaultMessage={'Participants'}/>;
-const useRHS = (playbookRun?: PlaybookRun|null) => {
+const useRHS = (runTitle?: string) => {
     const [isOpen, setIsOpen] = useState(true);
     const [scrollable, setScrollable] = useState(true);
     const [section, setSection] = useState<RHSContent>(RHSContent.RunInfo);
     const [title, setTitle] = useState<React.ReactNode>(RHSRunInfoTitle);
-    const [subtitle, setSubtitle] = useState<React.ReactNode>(playbookRun?.name);
+    const [subtitle, setSubtitle] = useState<React.ReactNode>(runTitle);
     const [onBack, setOnBack] = useState<() => void>();
 
     useUpdateEffect(() => {
-        setSubtitle(playbookRun?.name);
-    }, [playbookRun?.name]);
+        setSubtitle(runTitle);
+    }, [runTitle]);
 
     const open = (_section: RHSContent, _title: React.ReactNode, _subtitle?: React.ReactNode, _onBack?: () => void, _scrollable = true) => {
         setIsOpen(true);
@@ -89,6 +89,12 @@ const PlaybookRunDetails = () => {
     const retrospectiveMetricId = urlHash.startsWith('#' + PlaybookRunIDs.SectionRetrospective) ? urlHash.substring(1 + PlaybookRunIDs.SectionRetrospective.length) : '';
     const [playbookRun, playbookRunResult] = useRun(playbookRunId);
     const [playbook] = usePlaybook(playbookRun?.playbook_id);
+    const reporterId = playbookIsTutorialPlaybook(playbook?.title) && playbookRun?.name.endsWith("'s onboarding run") ? playbookRun.reporter_user_id : undefined;
+    const reporter = useAppSelector((state) => reporterId ? getUser(state, reporterId) : undefined);
+    useEnsureProfiles(reporterId ? [reporterId] : []);
+    const runTitle = reporter && playbookRun?.name === `${reporter.username}'s onboarding run` ?
+        tutorialRunTitle(formatMessage, reporter) :
+        playbookRun?.name;
 
     // we must force metadata refetch when participants change (leave&unfollow)
     const [metadata, metadataResult] = useRunMetadata(playbookRun?.id, [JSON.stringify(playbookRun?.participant_ids)]);
@@ -104,7 +110,7 @@ const PlaybookRunDetails = () => {
 
     useEnsureProfiles(playbookRun?.participant_ids ?? []);
 
-    const RHS = useRHS(playbookRun);
+    const RHS = useRHS(runTitle);
 
     useUpdateEffect(() => {
         resetFilters();
@@ -114,9 +120,9 @@ const PlaybookRunDetails = () => {
         const RHSUpdatesOpened = RHS.isOpen && RHS.section === RHSContent.RunStatusUpdates;
         const emptyUpdates = !playbookRun?.status_update_enabled || playbookRun.status_posts.length === 0;
         if (queryParams.from === 'channel_rhs_participants') {
-            RHS.open(RHSContent.RunParticipants, RHSParticipantsTitle, playbookRun?.name);
+            RHS.open(RHSContent.RunParticipants, RHSParticipantsTitle, runTitle);
         } else if (RHSUpdatesOpened && emptyUpdates) {
-            RHS.open(RHSContent.RunInfo, RHSRunInfoTitle, playbookRun?.name);
+            RHS.open(RHSContent.RunInfo, RHSRunInfoTitle, runTitle);
         }
     }, [playbookRun, RHS.section, RHS.isOpen]);
 
@@ -169,8 +175,8 @@ const PlaybookRunDetails = () => {
         return null;
     }
 
-    const onViewInfo = () => RHS.open(RHSContent.RunInfo, formatMessage({defaultMessage: 'Info'}), playbookRun.name);
-    const onViewTimeline = () => RHS.open(RHSContent.RunTimeline, formatMessage({defaultMessage: 'Timeline'}), playbookRun.name, undefined, false);
+    const onViewInfo = () => RHS.open(RHSContent.RunInfo, RHSRunInfoTitle, runTitle);
+    const onViewTimeline = () => RHS.open(RHSContent.RunTimeline, formatMessage({defaultMessage: 'Timeline'}), runTitle, undefined, false);
 
     let rhsComponent = null;
     switch (RHS.section) {
@@ -192,8 +198,8 @@ const PlaybookRunDetails = () => {
                 followState={followState}
                 channel={channel}
                 channelDeleted={channelDeleted}
-                onViewParticipants={() => RHS.open(RHSContent.RunParticipants, RHSParticipantsTitle, playbookRun.name, () => onViewInfo)}
-                onViewTimeline={() => RHS.open(RHSContent.RunTimeline, formatMessage({defaultMessage: 'Timeline'}), playbookRun.name, () => onViewInfo, false)}
+                onViewParticipants={() => RHS.open(RHSContent.RunParticipants, RHSParticipantsTitle, runTitle, () => onViewInfo)}
+                onViewTimeline={() => RHS.open(RHSContent.RunTimeline, formatMessage({defaultMessage: 'Timeline'}), runTitle, () => onViewInfo, false)}
             />
         );
         break;
@@ -231,6 +237,7 @@ const PlaybookRunDetails = () => {
                     <RunHeader
                         playbookRunMetadata={metadata ?? null}
                         playbookRun={playbookRun}
+                        runTitle={runTitle ?? playbookRun.name}
                         onInfoClick={onInfoClick}
                         onTimelineClick={onTimelineClick}
                         role={role}

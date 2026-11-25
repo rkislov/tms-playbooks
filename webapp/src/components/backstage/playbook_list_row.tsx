@@ -41,9 +41,9 @@ import {navigateToPluginUrl, navigateToUrl} from 'src/browser_routing';
 import {usePlaybookMembership} from 'src/graphql/hooks';
 import {Timestamp} from 'src/webapp_globals';
 import {openPlaybookRunModal} from 'src/actions';
+import {newTutorialRunTitle, playbookIsTutorialPlaybook} from 'src/components/templates/tutorial_run';
 
 import {InfoLine} from './styles';
-import {playbookIsTutorialPlaybook} from './playbook_editor/controls';
 import {useLHSRefresh} from './lhs_navigation';
 
 interface Props {
@@ -137,7 +137,13 @@ const PlaybookListRow = (props: Props) => {
 
     const run = async () => {
         if (props.playbook && isTutorialPlaybook) {
-            const playbookRun = await createPlaybookRun(props.playbook.id, currentUser.id, props.playbook.team_id, `${currentUser.username}'s onboarding run`, props.playbook.description);
+            const title = newTutorialRunTitle(formatMessage, currentUser);
+            const playbookRun = await createPlaybookRun(props.playbook.id, currentUser.id, props.playbook.team_id, title, props.playbook.description);
+            if (document.documentElement.dataset.taygaProduct === 'playbooks') {
+                navigateToPluginUrl(`/runs/${playbookRun.id}`);
+                refreshLHS();
+                return;
+            }
             const channel = await Client4.getChannel(playbookRun.channel_id);
 
             navigateToUrl({

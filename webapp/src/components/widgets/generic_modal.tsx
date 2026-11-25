@@ -136,17 +136,22 @@ export default class GenericModal extends React.PureComponent<Props, State> {
                 id={this.props.id}
                 container={document.getElementById('root-portal')}
             >
-                <Header
-                    className='GenericModal__header'
-                    closeButton={true}
-                    placeholder={undefined}
-                    onPointerEnterCapture={undefined}
-                    onPointerLeaveCapture={undefined}
-                >
-                    {Boolean(this.props.modalHeaderText) && (
-                        <ModalHeading id={`${this.props.id}_heading`}>{this.props.modalHeaderText}</ModalHeading>
+                <FormattedMessage defaultMessage='Close'>
+                    {(closeLabel) => (
+                        <Header
+                            className='GenericModal__header'
+                            closeButton={true}
+                            closeLabel={String(closeLabel)}
+                            placeholder={undefined}
+                            onPointerEnterCapture={undefined}
+                            onPointerLeaveCapture={undefined}
+                        >
+                            {Boolean(this.props.modalHeaderText) && (
+                                <ModalHeading id={`${this.props.id}_heading`}>{this.props.modalHeaderText}</ModalHeading>
+                            )}
+                        </Header>
                     )}
-                </Header>
+                </FormattedMessage>
                 <>
                     <Modal.Body>{this.props.children}</Modal.Body>
                     {showFooter ? (

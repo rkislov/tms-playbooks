@@ -252,11 +252,11 @@ const TimelineEventItem = (props: Props) => {
                 return details.title;
             }
 
-            // new format
+            const user = event.subject_display_name || details.users[0];
             if (details.action === 'joined') {
-                return formatMessage({defaultMessage: '@{user} joined the run'}, {user: details.users[0]});
+                return formatMessage({defaultMessage: '{user} joined the run'}, {user});
             }
-            return formatMessage({defaultMessage: '@{user} left the run'}, {user: details.users[0]});
+            return formatMessage({defaultMessage: '{user} left the run'}, {user});
         }
         case TimelineEventType.ParticipantsChanged: {
             const details = parsedDetails as ParticipantsChangedDetails;

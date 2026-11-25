@@ -55,7 +55,7 @@ const SectionHeaderContainer = styled.div`
 
 const SectionTitle = styled.div`
     color: rgba(var(--center-channel-color-rgb), 0.72);
-    font-family: 'Open Sans';
+    font-family: var(--body-font, inherit);
     font-size: 12px;
     font-style: normal;
     font-weight: 600;

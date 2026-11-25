@@ -50,6 +50,7 @@ import {
     restorePlaybook,
 } from 'src/client';
 import {OVERLAY_DELAY} from 'src/constants';
+import {playbookIsTutorialPlaybook} from 'src/components/templates/tutorial_run';
 import {ButtonIcon, PrimaryButton, SecondaryButton} from 'src/components/assets/buttons';
 import CheckboxInput from 'src/components/backstage/runs_list/checkbox_input';
 import {displayEditPlaybookAccessModal, openPlaybookRunModal} from 'src/actions';
@@ -238,9 +239,6 @@ export const AutoFollowToggle = ({playbook}: ControlProps) => {
         </SecondaryButtonLargerCheckbox>
     );
 };
-
-const LEARN_PLAYBOOKS_TITLE = 'Learn how to use playbooks';
-export const playbookIsTutorialPlaybook = (playbookTitle?: string) => playbookTitle === LEARN_PLAYBOOKS_TITLE || playbookTitle === 'Знакомство со сценариями';
 
 export const RunPlaybook = ({playbook}: ControlProps) => {
     const dispatch = useAppDispatch();

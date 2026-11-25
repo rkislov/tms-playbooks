@@ -80,6 +80,7 @@ const StatusBadge = (props: StatusBadgeProps) => {
     return (
         <Badge
             data-testid={'badge'}
+            data-status={props.status}
             $status={props.status}
             $compact={props.compact}
         >

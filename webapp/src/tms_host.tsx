@@ -24,6 +24,7 @@ const globals = window as any;
 Object.assign(globals, {React, ReactDOM: {...ReactDOM, createRoot}, Redux, ReactRedux, ReactRouterDom, ReactIntl, ReactBootstrap, Luxon, PropTypes: HostPropTypes, ReactJSXRuntime});
 const base = location.pathname.match(/^\/mm\/[a-z0-9]{26}/)?.[0];
 if (!base) {throw new Error('A scoped TMS product URL is required');}
+const bundleVersion = new URLSearchParams(document.currentScript instanceof HTMLScriptElement ? new URL(document.currentScript.src).search : '').get('v');
 globals.basename = base;
 const browserHistory = createBrowserHistory({basename: base});
 const openModals = new Map<string, any>();
@@ -110,7 +111,9 @@ async function boot() {
         };
         try {instances.push(Promise.resolve(plugin.initialize(registry, store)));} catch (error) {initializationError = error as Error;}
     };
-    await loadScript(base + '/static/plugins/' + selected + '/main.js');await Promise.all(instances);
+    const bundle = base + '/static/plugins/' + selected + '/main.js';
+    await loadScript(bundleVersion ? bundle + '?v=' + encodeURIComponent(bundleVersion) : bundle);
+    await Promise.all(instances);
     if (initializationError) {throw initializationError;}
     if (!product) {throw new Error('The installed plugin did not register a product');}
     const Product = product;

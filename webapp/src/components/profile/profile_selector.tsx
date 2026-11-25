@@ -335,8 +335,9 @@ const getUserDescription = (firstName: string, lastName: string, nickName: strin
 
 export const formatProfileName = (descriptionSuffix: string) => {
     return (preferredName: string, userName: string, firstName: string, lastName: string, nickName: string) => {
-        const name = '@' + userName;
-        const description = getUserDescription(firstName, lastName, nickName) + descriptionSuffix;
+        const showAccount = preferredName === userName;
+        const name = showAccount ? '@' + userName : preferredName;
+        const description = (showAccount ? getUserDescription(firstName, lastName, nickName) : '') + descriptionSuffix;
         return (
             <>
                 <span>{name}</span>
