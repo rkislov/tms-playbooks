@@ -47,27 +47,30 @@ with tempfile.TemporaryDirectory(prefix='tms-playbooks-package-') as tmp:
     third_party = plugin / 'THIRD-PARTY-NOTICES'
     third_party.mkdir()
     inventory = []
+    notices = bytearray()
     for package in packages:
         if package == root / 'webapp' or not (package / 'package.json').is_file():
             continue
         meta = json.loads((package / 'package.json').read_text())
         name = meta.get('name', package.name)
         version = meta.get('version', 'unknown')
-        label = ''.join(c if c.isalnum() or c in '.-_' else '_' for c in name + '-' + version)
-        dest = third_party / label
-        dest.mkdir(exist_ok=True)
-        shutil.copy2(package / 'package.json', dest / 'package.json')
+        notices.extend(('\n' + '=' * 72 + '\n' + name + '@' + version + '\n').encode())
         copied = []
         for item in package.iterdir():
             if item.is_file() and item.name.lower().startswith(('license', 'licence', 'notice', 'copying', 'copyright')):
-                shutil.copy2(item, dest / item.name)
+                notices.extend(('\n--- ' + item.name + ' ---\n').encode())
+                notices.extend(item.read_bytes())
+                notices.extend(b'\n')
                 copied.append(item.name)
         if not copied:
             for item in package.iterdir():
                 if item.is_file() and item.name.lower().startswith('readme'):
-                    shutil.copy2(item, dest / item.name)
+                    notices.extend(('\n--- ' + item.name + ' ---\n').encode())
+                    notices.extend(item.read_bytes())
+                    notices.extend(b'\n')
                     copied.append(item.name)
         inventory.append({'name': name, 'version': version, 'license': meta.get('license'), 'files': copied})
+    (third_party / 'licenses.txt').write_bytes(notices)
     (third_party / 'inventory.json').write_text(json.dumps(inventory, indent=2) + '\n')
     provenance = {
         'upstream_tag': 'v2.9.7',
@@ -78,6 +81,9 @@ with tempfile.TemporaryDirectory(prefix='tms-playbooks-package-') as tmp:
         'enterprise_directory_included': False,
     }
     (plugin / 'TMS-PROVENANCE.json').write_text(json.dumps(provenance, indent=2) + '\n')
+    entries = list(plugin.rglob('*'))
+    if len(entries) + 1 > 2500 or sum(p.stat().st_size for p in entries if p.is_file()) > 256 << 20:
+        raise SystemExit('Bundle exceeds TMS installer safety limits')
     with tarfile.open(archive, 'w:gz') as bundle:
         bundle.add(plugin, arcname='playbooks')
 digest = hashlib.sha256(archive.read_bytes()).hexdigest()
