@@ -17,10 +17,13 @@ import FeatureLifecycle from 'src/components/assets/illustrations/feature_lifecy
 import CustomerOnboarding from 'src/components/assets/illustrations/customer_onboarding_svg';
 import EmployeeOnboarding from 'src/components/assets/illustrations/employee_onboarding_svg';
 
+import tmsTemplateRu from './tms_template_ru.json';
+
 export interface PresetTemplate {
     label?: string;
     labelColor?: string;
     title: string;
+    displayTitle?: string;
     description?: string;
 
     author?: ReactNode;
@@ -29,11 +32,25 @@ export interface PresetTemplate {
     template: DraftPlaybookWithChecklist;
 }
 
+const russianInTayga = typeof window !== 'undefined' &&
+    /^\/mm\/[a-z0-9]{26}\//.test(window.location.pathname) &&
+    document.documentElement.lang === 'ru';
+const russianTemplateStrings: Record<string, string> = tmsTemplateRu;
+const localText = (text: string) => (russianInTayga ? (russianTemplateStrings[text.trim()] ?? text) : text);
+
+const localRich = (english: string, russian: string) => (russianInTayga ? russian : english);
+
 const preprocessTemplates = (presetTemplates: PresetTemplate[]): PresetTemplate[] => (
     presetTemplates.map((pt) => ({
         ...pt,
+        displayTitle: localText(pt.title),
+        label: pt.label && localText(pt.label),
+        description: pt.description && localText(pt.description),
         template: {
             ...pt.template,
+            title: localText(pt.template.title),
+            description: localText(pt.template.description),
+            channel_name_template: localText(pt.template.channel_name_template),
             num_stages: pt.template?.checklists.length,
             num_actions:
                 1 + // Channel creation is hard-coded
@@ -42,9 +59,11 @@ const preprocessTemplates = (presetTemplates: PresetTemplate[]): PresetTemplate[
                 (pt.template.run_summary_template_enabled ? 1 : 0),
             checklists: pt.template?.checklists.map((checklist) => ({
                 ...checklist,
+                title: localText(checklist.title),
                 items: checklist.items?.map((item) => ({
                     ...newChecklistItem(),
                     ...item,
+                    title: localText(item.title),
                 })) || [],
             })),
         },
@@ -119,34 +138,34 @@ export const PresetTemplates: PresetTemplate[] = preprocessTemplates([
             channel_name_template: 'Release (vX.Y)',
             message_on_join_enabled: true,
             message_on_join:
-                mtrim`Hello and welcome!
+                localRich(mtrim`Hello and welcome!
 
-                This channel was created as part of the **Product Release** playbook and is where conversations related to this release are held. You can customize this message using markdown so that every new channel member can be welcomed with helpful context and resources.`,
+                This channel was created as part of the **Product Release** playbook and is where conversations related to this release are held. You can customize this message using markdown so that every new channel member can be welcomed with helpful context and resources.`, "Добро пожаловать! Этот канал создан для обсуждения выпуска по сценарию **«Выпуск продукта»**. Добавьте сюда контекст и ссылки для новых участников."),
             run_summary_template_enabled: true,
             run_summary_template:
-                mtrim`**About**
+                localRich(mtrim`**About**
                 - Version number: TBD
                 - Target-date: TBD
 
                 **Resources**
                 - Jira filtered view: [link TBD](#)
-                - Blog post draft: [link TBD](#)`,
+                - Blog post draft: [link TBD](#)`, "**О выпуске**\n- Версия: уточняется\n- Целевая дата: уточняется\n\n**Материалы**\n- Задачи в Jira: [ссылка](#)\n- Черновик анонса: [ссылка](#)"),
             reminder_message_template:
-                mtrim`### Changes since last update
+                localRich(mtrim`### Changes since last update
                 -
 
                 ### Outstanding PRs
-                - `,
+                - `, "### Изменения с последнего обновления\n-\n\n### Открытые запросы на слияние\n-"),
             reminder_timer_default_seconds: 24 * 60 * 60, // 24 hours
             retrospective_template:
-                mtrim`### Start
+                localRich(mtrim`### Start
                 -
 
                 ### Stop
                 -
 
                 ### Keep
-                - `,
+                - `, "### Начать\n-\n\n### Прекратить\n-\n\n### Продолжить\n-"),
             retrospective_reminder_interval_seconds: 0, // Once
         },
     },
@@ -200,23 +219,23 @@ export const PresetTemplates: PresetTemplate[] = preprocessTemplates([
             channel_name_template: 'Incident: <name>',
             message_on_join_enabled: true,
             message_on_join:
-                mtrim`Hello and welcome!
+                localRich(mtrim`Hello and welcome!
 
-                This channel was created as part of the **Incident Resolution** playbook and is where conversations related to this release are held. You can customize this message using markdown so that every new channel member can be welcomed with helpful context and resources.`,
+                This channel was created as part of the **Incident Resolution** playbook and is where conversations related to this release are held. You can customize this message using markdown so that every new channel member can be welcomed with helpful context and resources.`, "Добро пожаловать! Этот канал создан по сценарию **«Устранение инцидента»**. Используйте его для обсуждения инцидента и добавьте ссылки на материалы для участников."),
             run_summary_template_enabled: true,
             run_summary_template:
-                mtrim`**Summary**
+                localRich(mtrim`**Summary**
 
                 **Customer impact**
 
                 **About**
                 - Severity: #sev-1/2/3
                 - Responders:
-                - ETA to resolution:`,
+                - ETA to resolution:`, "**Краткое описание**\n\n**Влияние на клиентов**\n\n**Подробности**\n- Критичность: #sev-1/2/3\n- Ответственные:\n- Ожидаемое время устранения:"),
             reminder_message_template: '',
             reminder_timer_default_seconds: 60 * 60, // 1 hour
             retrospective_template:
-                mtrim`### Summary
+                localRich(mtrim`### Summary
                 This should contain 2-3 sentences that give a reader an overview of what happened, what was the cause, and what was done. The briefer the better as this is what future teams will look at first for reference.
 
                 ### What was the impact?
@@ -235,7 +254,7 @@ export const PresetTemplates: PresetTemplate[] = preprocessTemplates([
                 This section lists the action items to turn learnings into changes that help the team become more proficient with iterations. It could include tweaking the playbook, publishing the retrospective, or other improvements. The best follow-ups will have a clear owner assigned as well as due date.
 
                 ### Timeline highlights
-                This section is a curated log that details the most important moments. It can contain key communications, screen shots, or other artifacts. Use the built-in timeline feature to help you retrace and replay the sequence of events.`,
+                This section is a curated log that details the most important moments. It can contain key communications, screen shots, or other artifacts. Use the built-in timeline feature to help you retrace and replay the sequence of events.`, "### Краткое описание\nВ двух-трёх предложениях опишите, что произошло, почему и как проблему устранили.\n\n### Влияние\nУкажите, как инцидент повлиял на клиентов, команду и другие заинтересованные стороны.\n\n### Причины\nПеречислите основные и сопутствующие причины.\n\n### Действия\nОпишите, что сделала команда, как проверила результат и что запланировала дальше."),
             retrospective_reminder_interval_seconds: 24 * 60 * 60, // 24 hours
             signal_any_keywords_enabled: true,
             signal_any_keywords: ['sev-1', 'sev-2', '#incident', 'this is serious'],
@@ -250,9 +269,9 @@ export const PresetTemplates: PresetTemplate[] = preprocessTemplates([
         template: {
             ...emptyPlaybook(),
             title: 'Customer Onboarding',
-            description: mtrim`New Mattermost customers are onboarded following a process similar to this playbook.
+            description: localRich(mtrim`New Mattermost customers are onboarded following a process similar to this playbook.
 
-            Customize this playbook to reflect your own customer onboarding process.`,
+            Customize this playbook to reflect your own customer onboarding process.`, "Сценарий основан на процессе подключения клиентов Mattermost. Адаптируйте его под ваш порядок работы с новыми клиентами."),
             checklists: [
                 {
                     title: 'Sales to Post-Sales Handoff',
@@ -307,12 +326,12 @@ export const PresetTemplates: PresetTemplate[] = preprocessTemplates([
             channel_name_template: 'Customer Onboarding: <name>',
             message_on_join_enabled: true,
             message_on_join:
-                mtrim`Hello and welcome!
+                localRich(mtrim`Hello and welcome!
 
-                This channel was created as part of the **Customer Onboarding** playbook and is where conversations related to this customer are held. You can customize this message using markdown so that every new channel member can be welcomed with helpful context and resources.`,
+                This channel was created as part of the **Customer Onboarding** playbook and is where conversations related to this customer are held. You can customize this message using markdown so that every new channel member can be welcomed with helpful context and resources.`, "Добро пожаловать! В этом канале обсуждается подключение клиента. Добавьте ссылки на материалы и укажите, кто отвечает за следующие шаги."),
             run_summary_template_enabled: true,
             run_summary_template:
-                mtrim`**About**
+                localRich(mtrim`**About**
                 - Account name: [TBD](#)
                 - Salesforce opportunity: [TBD](#)
                 - Order type:
@@ -320,16 +339,16 @@ export const PresetTemplates: PresetTemplate[] = preprocessTemplates([
 
                 **Team**
                 - Sales Rep: @TBD
-                - Customer Success Manager: @TBD`,
+                - Customer Success Manager: @TBD`, "**О клиенте**\n- Название: [уточняется](#)\n- Сделка в Salesforce: [уточняется](#)\n- Тип заказа:\n- Дата закрытия:\n\n**Команда**\n- Представитель отдела продаж: @ответственный\n- Менеджер сопровождения: @ответственный"),
             retrospective_template:
-                mtrim`### What went well?
+                localRich(mtrim`### What went well?
                 -
 
                 ### What could have gone better?
                 -
 
                 ### What should be changed for next time?
-                - `,
+                - `, "### Что получилось?\n-\n\n### Что можно улучшить?\n-\n\n### Что изменить к следующему запуску?\n-"),
             retrospective_reminder_interval_seconds: 0, // Once
         },
     },
@@ -342,9 +361,9 @@ export const PresetTemplates: PresetTemplate[] = preprocessTemplates([
         template: {
             ...emptyPlaybook(),
             title: 'Employee Onboarding',
-            description: mtrim`Every new Mattermost Staff member completes this onboarding process when joining the company.
+            description: localRich(mtrim`Every new Mattermost Staff member completes this onboarding process when joining the company.
 
-            Customize this playbook to reflect your own employee onboarding process.`,
+            Customize this playbook to reflect your own employee onboarding process.`, "Сценарий основан на процессе адаптации сотрудников Mattermost. Настройте его под порядок работы вашей команды."),
             checklists: [
                 {
                     title: 'Pre-day one',
@@ -352,10 +371,10 @@ export const PresetTemplates: PresetTemplate[] = preprocessTemplates([
                         newChecklistItem('Complete the [Onboarding Systems Form in the IT HelpDesk](https://helpdesk.mattermost.com/support/home)'),
                         newChecklistItem(
                             'Complete the onboarding template prior to your new staff member\'s start date',
-                            mtrim`Managers play a large role in setting their new direct report up for success and making them feel welcome by setting clear expectations and preparing the team and internal stakeholders for how they can help new colleagues integrate and connect organizationally and culturally.
+                            localRich(mtrim`Managers play a large role in setting their new direct report up for success and making them feel welcome by setting clear expectations and preparing the team and internal stakeholders for how they can help new colleagues integrate and connect organizationally and culturally.
                                 * **Onboarding Objectives:** Clarify the areas and projects your new team member should focus on in their first 90 days. Use the _Overview of the Role_ that you completed when you opened the role.
                                 * **AOR clarity:** Identify AORs that are relevant for your new hire, and indicate any AORs that your new hire will [DRI](https://handbook.mattermost.com/company/about-mattermost/list-of-terms#dri) or act as backup DRI. As needed, clarify AOR transitions with internal stakeholders ahead of your new hire's start date. See [AOR page](https://handbook.mattermost.com/operations/operations/areas-of-responsibility) Include the interview panel and their respective focus areas.
-                                * **Assign an Onboarding Peer:** The Onboarding Peer or peers should be an individual or group of people that can help answer questions about the team, department and Mattermost. In many ways, an Onboarding Peer may be an [end-boss](https://handbook.mattermost.com/company/about-mattermost/mindsets#mini-boss-end-boss) for specific AORs. Managers should ask permission of a potential Onboarding Peer prior to assignment.`,
+                                * **Assign an Onboarding Peer:** The Onboarding Peer or peers should be an individual or group of people that can help answer questions about the team, department and Mattermost. In many ways, an Onboarding Peer may be an [end-boss](https://handbook.mattermost.com/company/about-mattermost/mindsets#mini-boss-end-boss) for specific AORs. Managers should ask permission of a potential Onboarding Peer prior to assignment.`, "До первого дня согласуйте с коллегами ожидания и необходимые доступы.\n\n- **Первые 90 дней.** Определите приоритетные проекты и ожидаемые результаты.\n- **Ответственность.** Опишите зоны ответственности, основных и резервных исполнителей.\n- **Поддержка.** Решите, кто познакомит новичка с командой и ответит на первые вопросы."),
                         ),
                     ],
                 },
@@ -364,9 +383,9 @@ export const PresetTemplates: PresetTemplate[] = preprocessTemplates([
                     items: [
                         newChecklistItem(
                             'Introduce our new staff member in the [Welcome Channel](https://community.mattermost.com/private-core/channels/welcome)',
-                            mtrim`All new hires are asked to complete a short bio and share with their Managers. Managers should include this bio in the welcome message.
+                            localRich(mtrim`All new hires are asked to complete a short bio and share with their Managers. Managers should include this bio in the welcome message.
 
-                                Be sure to include the hashtag \#newcolleague when posting your message.`,
+                                Be sure to include the hashtag \#newcolleague when posting your message.`, "Попросите нового сотрудника подготовить краткое представление и добавить его в приветственное сообщение с меткой #newcolleague."),
                         ),
                         newChecklistItem(
                             'Review Team [AORs](https://handbook.mattermost.com/operations/operations/areas-of-responsibility)',
@@ -421,20 +440,20 @@ export const PresetTemplates: PresetTemplate[] = preprocessTemplates([
             channel_name_template: 'Employee Onboarding: <name>',
             message_on_join_enabled: true,
             message_on_join:
-                mtrim`Hello and welcome!
+                localRich(mtrim`Hello and welcome!
 
-                This channel was created as part of the **Employee Onboarding** playbook and is where conversations related to onboarding this employee are held. You can customize this message using markdown so that every new channel member can be welcomed with helpful context and resources.`,
+                This channel was created as part of the **Employee Onboarding** playbook and is where conversations related to onboarding this employee are held. You can customize this message using markdown so that every new channel member can be welcomed with helpful context and resources.`, "Добро пожаловать! Канал создан по сценарию **«Адаптация сотрудника»**. Здесь можно обсуждать первые задачи, задавать вопросы и делиться полезными материалами."),
             run_summary_template: '',
             reminder_timer_default_seconds: 7 * 24 * 60 * 60, // once a week
             retrospective_template:
-                mtrim`### What went well?
+                localRich(mtrim`### What went well?
                 -
 
                 ### What could have gone better?
                 -
 
                 ### What should be changed for next time?
-                - `,
+                - `, "### Что получилось?\n-\n\n### Что можно улучшить?\n-\n\n### Что изменить к следующему запуску?\n-"),
             retrospective_reminder_interval_seconds: 0, // Once
         },
     },
@@ -463,18 +482,18 @@ export const PresetTemplates: PresetTemplate[] = preprocessTemplates([
                     items: [
                         newChecklistItem(
                             'Choose an engineering owner for the feature',
-                            mtrim`Expectations for the owner:
+                            localRich(mtrim`Expectations for the owner:
                             - Responsible for setting and meeting expectation for target dates' +
                             - Post weekly status update' +
                             - Demo feature at R&D meeting' +
-                            - Ensure technical quality after release`,
+                            - Ensure technical quality after release`, "Ответственный согласует сроки, публикует еженедельные обновления, показывает функцию на встрече разработки и следит за качеством после выпуска."),
                         ),
                         newChecklistItem('Identify and invite contributors to the feature channel'),
                         newChecklistItem(
                             'Schedule kickoff and recurring check-in meetings',
-                            mtrim`Expectations leaving the kickoff meeting:
+                            localRich(mtrim`Expectations leaving the kickoff meeting:
                             - Alignment on the precise problem in addition to rough scope and target
-                            - Clear next steps and deliverables for each individual`,
+                            - Clear next steps and deliverables for each individual`, "К концу встречи команда должна согласовать проблему, приблизительный объём работы, сроки и конкретные следующие шаги для каждого участника."),
                         ),
                     ],
                 },
@@ -495,18 +514,18 @@ export const PresetTemplates: PresetTemplate[] = preprocessTemplates([
                         newChecklistItem('Merge all feature and bug PRs to master'),
                         newChecklistItem(
                             'Demo to the community',
-                            mtrim`For example:
+                            localRich(mtrim`For example:
                             - R&D meeting
                             - Developer meeting
-                            - Company wide meeting`
+                            - Company wide meeting`, "Например, покажите результат на встрече разработки, встречи разработчиков или общем собрании.")
                         ),
                         newChecklistItem('Build telemetry dashboard to measure adoption'),
                         newChecklistItem(
                             'Create launch kit for go-to-market teams',
-                            mtrim`Including but not exclusive to:
+                            localRich(mtrim`Including but not exclusive to:
                             - release blog post
                             - one-pager
-                            - demo video`,
+                            - demo video`, "Подготовьте анонс выпуска, краткую справку и демонстрационное видео."),
                         ),
                     ],
                 },
@@ -522,12 +541,12 @@ export const PresetTemplates: PresetTemplate[] = preprocessTemplates([
             channel_name_template: 'Feature: <name>',
             message_on_join_enabled: true,
             message_on_join:
-                mtrim`Hello and welcome!
+                localRich(mtrim`Hello and welcome!
 
-                This channel was created as part of the **Feature Lifecycle** playbook and is where conversations related to developing this feature are held. You can customize this message using Markdown so that every new channel member can be welcomed with helpful context and resources.`,
+                This channel was created as part of the **Feature Lifecycle** playbook and is where conversations related to developing this feature are held. You can customize this message using Markdown so that every new channel member can be welcomed with helpful context and resources.`, "Добро пожаловать! Здесь обсуждается разработка функции. Добавьте краткое описание, сроки и ссылки на материалы для новых участников."),
             run_summary_template_enabled: true,
             run_summary_template:
-                mtrim`**One-liner**
+                localRich(mtrim`**One-liner**
                 <ie. Enable users to prescribe a description template so it\'s consistent for every run and therefore easier to read.>
 
                 **Targets release**
@@ -538,26 +557,26 @@ export const PresetTemplates: PresetTemplate[] = preprocessTemplates([
                 - Jira Epic: <link>
                 - UX prototype: <link>
                 - Technical design: <link>
-                - User docs: <link>`,
+                - User docs: <link>`, "**Краткое описание**\nОпишите, что делает функция и кому она нужна.\n\n**Сроки выпуска**\n- Готовность кода: дата\n- Публикация для клиентов: месяц\n\n**Материалы**\n- Задача в Jira: ссылка\n- Макет: ссылка\n- Технический проект: ссылка\n- Руководство пользователя: ссылка"),
             reminder_message_template:
-                mtrim`### Demo
+                localRich(mtrim`### Demo
                 <Insert_GIF_here>
 
                 ### Changes since last week
                 -
 
                 ### Risks
-                - `,
+                - `, "### Демонстрация\nДобавьте изображение или видео.\n\n### Изменения за неделю\n-\n\n### Риски\n-"),
             reminder_timer_default_seconds: 24 * 60 * 60, // 1 day
             retrospective_template:
-                mtrim`### Start
+                localRich(mtrim`### Start
                 -
 
                 ### Stop
                 -
 
                 ### Keep
-                - `,
+                - `, "### Начать\n-\n\n### Прекратить\n-\n\n### Продолжить\n-"),
             retrospective_reminder_interval_seconds: 0, // Once
         },
     },
@@ -570,9 +589,9 @@ export const PresetTemplates: PresetTemplate[] = preprocessTemplates([
         template: {
             ...emptyPlaybook(),
             title: 'Bug Bash',
-            description: mtrim`About once or twice a month, the Mattermost Playbooks team uses this playbook to run a 50 minute bug-bash testing the latest version of Playbooks.
+            description: localRich(mtrim`About once or twice a month, the Mattermost Playbooks team uses this playbook to run a 50 minute bug-bash testing the latest version of Playbooks.
 
-            Customize this playbook to reflect your own bug bash process.`,
+            Customize this playbook to reflect your own bug bash process.`, "Проведите 50-минутную сессию совместного тестирования новой версии Playbooks. Настройте сценарий под работу своей команды."),
             create_public_playbook_run: true,
             channel_name_template: 'Bug Bash (vX.Y)',
             checklists: [
@@ -604,24 +623,24 @@ export const PresetTemplates: PresetTemplate[] = preprocessTemplates([
                         ),
                         newChecklistItem(
                             'Enable Open Servers & CRT for all Cloud Instances',
-                            mtrim`From a command line, login to each server in turn via [\`mmctl\`](https://github.com/mattermost/mmctl), and configure, e.g.:
+                            localRich(mtrim`From a command line, login to each server in turn via [\`mmctl\`](https://github.com/mattermost/mmctl), and configure, e.g.:
                                 \`\`\`
                                 for server in playbooks-bug-bash-t0 playbooks-bug-bash-e0 playbooks-bug-bash-e10 playbooks-bug-bash-e20; do
                                     mmctl auth login https://$server.test.mattermost.cloud --name $server --username sysadmin --password-file <(echo "Sys@dmin123");
                                     mmctl config set TeamSettings.EnableOpenServer true;
                                     mmctl config set ServiceSettings.CollapsedThreads default_on;
                                 done
-                                \`\`\``,
+                                \`\`\``, "Войдите в изолированные тестовые экземпляры через mmctl с выделенными реквизитами. Для каждого экземпляра настройте нужные параметры открытой регистрации и веток согласно плану тестирования."),
                         ),
                         newChecklistItem(
                             'Install the plugin to each instance',
-                            mtrim`From a command line, login to each server in turn via [\`mmctl\`](https://github.com/mattermost/mmctl), and configure, e.g.:
+                            localRich(mtrim`From a command line, login to each server in turn via [\`mmctl\`](https://github.com/mattermost/mmctl), and configure, e.g.:
                                 \`\`\`
                                 for server in playbooks-bug-bash-t0 playbooks-bug-bash-e0 playbooks-bug-bash-e10 playbooks-bug-bash-e20; do
                                     mmctl auth login https://$server.test.mattermost.cloud --name $server --username sysadmin --password-file <(echo "Sys@dmin123");
                                     mmctl plugin install-url --force https://github.com/mattermost/mattermost-plugin-playbooks/releases/download/v1.22.0%2Balpha.3/playbooks-1.22.0+alpha.3.tar.gz
                                 done
-                                \`\`\``,
+                                \`\`\``, "Войдите в каждый изолированный тестовый экземпляр через mmctl и установите проверенный тестовый пакет по инструкции к выпуску."),
                         ),
                         newChecklistItem(
                             'Announce Bug Bash',
@@ -691,13 +710,13 @@ export const PresetTemplates: PresetTemplate[] = preprocessTemplates([
                 },
             ],
             status_update_enabled: true,
-            message_on_join: mtrim`Welcome! We're using this channel to run a 50 minute bug-bash the new version of Playbooks. The first 10 minutes will be spent identifying scope and ownership, followed by 30 minutes of targeted testing in the defined areas, and 10 minutes of triage.
+            message_on_join: localRich(mtrim`Welcome! We're using this channel to run a 50 minute bug-bash the new version of Playbooks. The first 10 minutes will be spent identifying scope and ownership, followed by 30 minutes of targeted testing in the defined areas, and 10 minutes of triage.
 
-            When you find an issue, post a new thread in this channel tagged #bug and share any screenshots and reproduction steps. The owner of this bash will triage the messages into tickets as needed.`,
+            When you find an issue, post a new thread in this channel tagged #bug and share any screenshots and reproduction steps. The owner of this bash will triage the messages into tickets as needed.`, "Добро пожаловать на совместное тестирование! Первые 10 минут согласуем объём и ответственных, следующие 30 минут проверяем выбранные области, последние 10 минут разбираем результаты. Для ошибки создайте ветку с меткой #bug, шагами воспроизведения и снимками экрана."),
             message_on_join_enabled: true,
             retrospective_enabled: false,
             run_summary_template_enabled: true,
-            run_summary_template: mtrim`The playbooks team is executing a bug bash to qualify the next shipping version.
+            run_summary_template: localRich(mtrim`The playbooks team is executing a bug bash to qualify the next shipping version.
 
             As we encounter issues, simply start a new thread and tag with #bug (or #feature) to make tracking these easier.
 
@@ -716,7 +735,7 @@ export const PresetTemplates: PresetTemplate[] = preprocessTemplates([
 
             | Username | Password |
             | -- | -- |
-            | sysadmin | Sys@dmin123 |`,
+            | sysadmin | Sys@dmin123 |`, "Команда проверяет версию перед выпуском. Для найденных ошибок и идей создавайте ветки с метками #bug и #feature.\n\n- Ссылка на выпуск:\n- Видеовстреча:\n- Список задач для разбора:\n- Тестовые экземпляры:"),
         },
     },
     {
@@ -730,7 +749,7 @@ export const PresetTemplates: PresetTemplate[] = preprocessTemplates([
         template: {
             ...emptyPlaybook(),
             title: 'Learn how to use playbooks',
-            description: mtrim`Use this playbook to learn more about playbooks. Go through this page to check out the contents or simply select 'start a test run' in the top right corner.`,
+            description: localRich(mtrim`Use this playbook to learn more about playbooks. Go through this page to check out the contents or simply select 'start a test run' in the top right corner.`, "В этом сценарии можно познакомиться с настройками и запусками. Просмотрите его или нажмите кнопку тестового запуска в правом верхнем углу."),
             create_public_playbook_run: true,
             channel_name_template: 'Onboarding Run',
             checklists: [
@@ -759,11 +778,11 @@ export const PresetTemplates: PresetTemplate[] = preprocessTemplates([
             message_on_join_enabled: false,
             retrospective_enabled: false,
             run_summary_template_enabled: true,
-            run_summary_template: mtrim`This summary area helps everyone involved gather context at a glance. It supports markdown syntax just like a channel message, just click to edit and try it out!
+            run_summary_template: localRich(mtrim`This summary area helps everyone involved gather context at a glance. It supports markdown syntax just like a channel message, just click to edit and try it out!
 
             - Start date: 20 Dec, 2021
             - Target date: To be determined
-            - User guide: Playbooks docs`,
+            - User guide: Playbooks docs`, "Сводка помогает участникам быстро понять контекст. Она поддерживает Markdown. Попробуйте её отредактировать.\n\n- Дата начала: 20 декабря 2021\n- Целевая дата: уточняется\n- Справка: документация сценариев"),
         },
     },
 ]);

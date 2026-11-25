@@ -246,7 +246,7 @@ const TemplateRow = (props: TemplateRowProps) => {
                 <BookOutlineIcon {...iconProps}/>
             </ItemIcon>
             <ItemCenter>
-                <ItemTitle>{template.title}</ItemTitle>
+                <ItemTitle>{template.displayTitle || template.title}</ItemTitle>
                 {template.description && <ItemDescription>{template.description}</ItemDescription>}
                 <ItemSubTitle>
                     <span>{formatMessage({defaultMessage: 'Never used'})}</span>

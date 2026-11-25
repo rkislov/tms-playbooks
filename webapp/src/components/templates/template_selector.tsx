@@ -20,7 +20,7 @@ import {useLHSRefresh} from 'src/components/backstage/lhs_navigation';
 import TemplateItem from './template_item';
 import PresetTemplates, {PresetTemplate} from './template_data';
 
-const presetTemplateOptions = PresetTemplates.map((template: PresetTemplate) => ({label: template.title, value: template.title}));
+const presetTemplateOptions = PresetTemplates.map((template: PresetTemplate) => ({label: template.displayTitle || template.title, value: template.title}));
 
 interface Props {
     templates?: PresetTemplate[];
@@ -65,7 +65,8 @@ const instantCreatePlaybook = async (template: PresetTemplate, teamID: string, u
     pb.public = true;
     pb.team_id = teamID;
     if (username !== '') {
-        pb.title = '@' + username + "'s " + template.title;
+        const title = template.displayTitle || template.title;
+        pb.title = title === template.title ? '@' + username + "'s " + title : title + ' · @' + username;
     }
     const data = await savePlaybook(pb);
 
@@ -84,7 +85,7 @@ const TemplateSelector = ({templates = PresetTemplates}: Props) => {
                 <TemplateItem
                     key={template.title}
                     label={template.label}
-                    title={template.title}
+                    title={template.displayTitle || template.title}
                     description={template.description ?? ''}
                     color={template.color}
                     icon={template.icon}

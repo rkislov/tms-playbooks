@@ -175,10 +175,10 @@ const RHSHome = () => {
                             <>
                                 <ListHeading><FormattedMessage defaultMessage='Playbook Examples'/></ListHeading>
                                 <ListSection>
-                                    {PresetTemplates.map(({title, template}) => (
+                                    {PresetTemplates.map(({title, displayTitle, template}) => (
                                         <RHSHomeTemplate
                                             key={title}
-                                            title={title}
+                                            title={displayTitle || title}
                                             template={template}
                                             onUse={newPlaybook}
                                         />

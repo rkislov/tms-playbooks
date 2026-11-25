@@ -240,7 +240,7 @@ export const AutoFollowToggle = ({playbook}: ControlProps) => {
 };
 
 const LEARN_PLAYBOOKS_TITLE = 'Learn how to use playbooks';
-export const playbookIsTutorialPlaybook = (playbookTitle?: string) => playbookTitle === LEARN_PLAYBOOKS_TITLE;
+export const playbookIsTutorialPlaybook = (playbookTitle?: string) => playbookTitle === LEARN_PLAYBOOKS_TITLE || playbookTitle === 'Знакомство со сценариями';
 
 export const RunPlaybook = ({playbook}: ControlProps) => {
     const dispatch = useAppDispatch();
